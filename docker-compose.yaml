@@ -1,0 +1,33 @@
+services:
+  prasorganic-product-service-postgres:
+    container_name: prasorganic-product-service-postgres
+    image: postgres:16.0
+    ports:
+      - 5435:5432
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - type: volume
+        source: prasorganic-product-service-postgres-data
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./doc/database/postgresql/postgresql.conf
+        target: /etc/postgresql/postgresql.conf
+    networks:
+      - prasorganic-network
+      - prasorganic-product-service-network
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    restart: on-failure
+
+volumes:
+  prasorganic-product-service-postgres-data:
+    name: prasorganic-product-service-postgres-data
+
+networks:
+  prasorganic-product-service-network:
+    name: prasorganic-product-service-network
+    driver: bridge
+  prasorganic-network:
+    name: prasorganic-network
+    external: true
