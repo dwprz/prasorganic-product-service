@@ -43,10 +43,11 @@ func (c *CreateTestSuite) TearDownSuite() {
 }
 
 func (c *CreateTestSuite) Test_Success() {
-	req := &dto.CreateReq{
+	req := &dto.CreateProductReq{
 		ProductName: "apel hijau",
 		ImageId:     "uweh28hsajewu2ijs",
 		Image:       "https://example-prasor.com/image",
+		Category:    "fruit",
 		Price:       10000,
 		Stock:       250,
 		Length:      25,
@@ -61,10 +62,11 @@ func (c *CreateTestSuite) Test_Success() {
 }
 
 func (c *CreateTestSuite) Test_AlreadyExists() {
-	req := &dto.CreateReq{
+	req := &dto.CreateProductReq{
 		ProductName: "apel hijau",
 		ImageId:     "uweh28hsajewu2ijs",
 		Image:       "https://example-prasor.com/image",
+		Category:    "fruit",
 		Price:       10000,
 		Stock:       250,
 		Length:      25,
