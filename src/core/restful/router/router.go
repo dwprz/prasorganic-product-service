@@ -9,4 +9,5 @@ import (
 func Create(app *fiber.App, h *handler.Product, m *middleware.Middleware) {
 	app.Add("POST", "/api/products", m.VerifyJwt, m.VerifySuperAdmin, m.SaveTemporaryImage, m.ValidateImage, m.UploadToImageKit, h.Create)
 	app.Add("GET", "/api/products", h.Get)
+	app.Add("PATCH", "/api/products/:productId", m.VerifyJwt, m.VerifySuperAdmin, h.Update)
 }

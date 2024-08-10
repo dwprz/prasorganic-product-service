@@ -3,7 +3,7 @@ package middleware
 import (
 	"fmt"
 
-	"github.com/dwprz/prasorganic-product-service/src/common/errors"
+	errcustom "github.com/dwprz/prasorganic-product-service/src/common/errors"
 	"github.com/dwprz/prasorganic-product-service/src/infrastructure/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -13,7 +13,7 @@ func (m *Middleware) VerifyJwt(c *fiber.Ctx) error {
 	accessToken := c.Cookies("access_token")
 
 	if accessToken == "" {
-		return &errors.Response{HttpCode: 401, Message: "access token required"}
+		return &errcustom.Response{HttpCode: 401, Message: "token is required"}
 	}
 
 	jwtToken, err := jwt.Parse(accessToken, func(t *jwt.Token) (interface{}, error) {
@@ -33,5 +33,5 @@ func (m *Middleware) VerifyJwt(c *fiber.Ctx) error {
 		return c.Next()
 	}
 
-	return &errors.Response{HttpCode: 401, Message: "access token is invalid"}
+	return &errcustom.Response{HttpCode: 401, Message: "token is invalid"}
 }

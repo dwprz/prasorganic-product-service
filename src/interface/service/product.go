@@ -10,4 +10,5 @@ import (
 type Product interface {
 	Create(ctx context.Context, data *dto.CreateProductReq) error
 	Get(ctx context.Context, data *dto.GetProductReq) (*dto.DataWithPaging[*[]entity.Product], error)
+	Update(ctx context.Context, data *dto.UpdateProductReq) (*entity.Product, error)
 }

@@ -2,28 +2,21 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 
-	"github.com/dwprz/prasorganic-product-service/src/common/errors"
+	errcustom "github.com/dwprz/prasorganic-product-service/src/common/errors"
+	"github.com/dwprz/prasorganic-product-service/src/common/errors/restful"
 	"github.com/dwprz/prasorganic-product-service/src/common/helper"
-	"github.com/dwprz/prasorganic-product-service/src/common/log"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/imagekit-developer/imagekit-go/api/uploader"
-	"github.com/sirupsen/logrus"
 )
 
 func (m *Middleware) Error(c *fiber.Ctx, err error) error {
-	log.Logger.WithFields(logrus.Fields{
-		"host":     c.Hostname(),
-		"ip":       c.IP(),
-		"protocol": c.Protocol(),
-		"location": c.OriginalURL(),
-		"method":   c.Method(),
-		"from":     "error middleware",
-	}).Error(err.Error())
+	restful.LogError(c, err)
 
 	if c.OriginalURL() == "/api/products" && c.Method() == "POST" {
-		
+
 		filename, ok := c.Locals("filename").(string)
 		if ok && filename != "" {
 			go helper.DeleteFile("./tmp/" + filename)
@@ -36,19 +29,19 @@ func (m *Middleware) Error(c *fiber.Ctx, err error) error {
 	}
 
 	if validationError, ok := err.(validator.ValidationErrors); ok {
-
-		return c.Status(400).JSON(fiber.Map{
-			"errors": map[string]any{
-				"field":       validationError[0].Field(),
-				"description": validationError[0].Error(),
-			},
-		})
+		return restful.HandleValidationError(c, validationError)
 	}
 
-	if responseError, ok := err.(*errors.Response); ok {
-		return c.Status(int(responseError.HttpCode)).JSON(fiber.Map{
-			"errors": responseError.Message,
-		})
+	if responseError, ok := err.(*errcustom.Response); ok {
+		return restful.HandleResponseError(c, responseError)
+	}
+
+	if jwtError := restful.HanldeJwtError(err); jwtError != nil {
+		return c.Status(401).JSON(fiber.Map{"errors": jwtError.Error()})
+	}
+
+	if jsonError, ok := err.(*json.UnmarshalTypeError); ok {
+		return restful.HandleJsonError(c, jsonError)
 	}
 
 	return c.Status(500).JSON(fiber.Map{

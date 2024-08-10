@@ -3,13 +3,13 @@ package repository
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 
-	"github.com/dwprz/prasorganic-product-service/src/common/errors"
+	errcustom "github.com/dwprz/prasorganic-product-service/src/common/errors"
 	"github.com/dwprz/prasorganic-product-service/src/interface/repository"
 	"github.com/dwprz/prasorganic-product-service/src/model/dto"
 	"github.com/dwprz/prasorganic-product-service/src/model/entity"
-	"github.com/jackc/pgx/v5/pgconn"
 	"google.golang.org/grpc/codes"
 	"gorm.io/gorm"
 )
@@ -29,8 +29,8 @@ func (p *ProductImpl) Create(ctx context.Context, data *dto.CreateProductReq) er
 
 	if err := p.db.WithContext(ctx).Table("products").Create(data).Error; err != nil {
 
-		if errPG, ok := err.(*pgconn.PgError); ok && errPG.Code == "23505" {
-			return &errors.Response{
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return &errcustom.Response{
 				HttpCode: 409,
 				GrpcCode: codes.AlreadyExists,
 				Message:  "product already exists",
@@ -41,6 +41,21 @@ func (p *ProductImpl) Create(ctx context.Context, data *dto.CreateProductReq) er
 	}
 
 	return nil
+}
+
+func (p *ProductImpl) FindById(ctx context.Context, productId uint) (*entity.Product, error) {
+	product := new(entity.Product)
+
+	if err := p.db.WithContext(ctx).Table("products").Where("product_id = ?", productId).First(&product).Error; err != nil {
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, &errcustom.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "product not found"}
+		}
+
+		return nil, err
+	}
+
+	return product, nil
 }
 
 func (p *ProductImpl) FindManyRandom(ctx context.Context, limit, offset int) (*dto.ProductsWithCountRes, error) {
@@ -71,7 +86,7 @@ func (p *ProductImpl) FindManyRandom(ctx context.Context, limit, offset int) (*d
 	}
 
 	if queryRes.TotalProducts == 0 {
-		return nil, &errors.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
+		return nil, &errcustom.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
 	}
 
 	var products []entity.Product
@@ -120,7 +135,7 @@ func (p *ProductImpl) FindManyByCategory(ctx context.Context, category string, l
 	}
 
 	if queryRes.TotalProducts == 0 {
-		return nil, &errors.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
+		return nil, &errcustom.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
 	}
 
 	var products []entity.Product
@@ -168,7 +183,7 @@ func (p *ProductImpl) FindManyByName(ctx context.Context, name string, limit, of
 	}
 
 	if len(queryRes.Products) == 0 {
-		return nil, &errors.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
+		return nil, &errcustom.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
 	}
 
 	var products []entity.Product
@@ -180,4 +195,26 @@ func (p *ProductImpl) FindManyByName(ctx context.Context, name string, limit, of
 		Products:      &products,
 		TotalProducts: queryRes.TotalProducts,
 	}, nil
+}
+
+func (p *ProductImpl) UpdateById(ctx context.Context, data *dto.UpdateProductReq) error {
+	err := p.db.Transaction(func(tx *gorm.DB) error {
+		if data.Stock != 0 {
+			if err := tx.WithContext(ctx).Raw("SELECT stock FROM products WHERE product_id = $1 FOR UPDATE;", data.ProductId).Error; err != nil {
+				return err
+			}
+		}
+
+		if err := tx.WithContext(ctx).Table("products").Where("product_id = ?", data.ProductId).Updates(data).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

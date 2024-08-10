@@ -27,3 +27,13 @@ func (p *ProductMock) Get(ctx context.Context, data *dto.GetProductReq) (*dto.Da
 
 	return arguments.Get(0).(*dto.DataWithPaging[*[]entity.Product]), arguments.Error(1)
 }
+
+func (p *ProductMock) Update(ctx context.Context, data *dto.UpdateProductReq) (*entity.Product, error) {
+	arguments := p.Mock.Called(ctx, data)
+
+	if arguments.Get(0) == nil {
+		return nil, arguments.Error(1)
+	}
+
+	return arguments.Get(0).(*entity.Product), arguments.Error(1)
+}

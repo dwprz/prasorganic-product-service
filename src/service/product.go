@@ -57,3 +57,16 @@ func (p *ProductImpl) Get(ctx context.Context, data *dto.GetProductReq) (*dto.Da
 
 	return helper.FormatPagedData(res.Products, res.TotalProducts, data.Page, limit), nil
 }
+
+func (p *ProductImpl) Update(ctx context.Context, data *dto.UpdateProductReq) (*entity.Product, error) {
+	if err := p.validate.Struct(data); err != nil {
+		return nil, err
+	}
+
+	if err := p.productRepo.UpdateById(ctx, data); err != nil {
+		return nil, err
+	}
+
+	res, err := p.productRepo.FindById(ctx, data.ProductId)
+	return res, err
+}

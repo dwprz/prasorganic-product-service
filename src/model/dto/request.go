@@ -20,3 +20,17 @@ type GetProductReq struct {
 	Category    string `json:"category" validate:"omitempty,min=3,max=20"`
 }
 
+type UpdateProductReq struct {
+	ProductId   uint    `json:"product_id" validate:"required"`
+	ProductName string `json:"product_name" validate:"omitempty,min=3,max=100"`
+	Rating      float32 `json:"rating" validate:"omitempty"`
+	Sold        uint32  `json:"sold" validate:"omitempty"`
+	Price       uint    `json:"price" validate:"omitempty"`
+	Stock       uint    `json:"stock" validate:"omitempty"`
+	Category    string  `json:"category" validate:"omitempty,min=3,max=20"`
+	Length      uint8   `json:"length" validate:"omitempty"`
+	Width       uint8   `json:"width" validate:"omitempty"`
+	Height      uint8   `json:"height" validate:"omitempty"`
+	Weight      uint    `json:"weight" validate:"omitempty"`
+	Description string  `json:"description" validate:"omitempty"`
+}
