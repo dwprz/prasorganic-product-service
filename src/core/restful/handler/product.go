@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/dwprz/prasorganic-product-service/src/core/restful/client"
@@ -42,7 +43,7 @@ func (p *Product) Create(c *fiber.Ctx) error {
 }
 
 func (p *Product) Get(c *fiber.Ctx) error {
-	page, err := strconv.Atoi(c.Query("page"))
+	page, err := strconv.Atoi(c.Query("page", "1"))
 	if err != nil {
 		return err
 	}
@@ -81,6 +82,31 @@ func (p *Product) Update(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+
+	return c.Status(200).JSON(fiber.Map{"data": res})
+}
+
+func (p *Product) UpdateImage(c *fiber.Ctx) error {
+	req := new(dto.UpdateProductImageReq)
+
+	productId, err := strconv.Atoi(c.Params("productId"))
+	if err != nil {
+		return err
+	}
+
+	req.ProductId = uint(productId)
+
+	uploadRes := c.Locals("upload_imagekit_result").(*uploader.UploadResult)
+	req.ImageId = uploadRes.FileId
+	req.Image = uploadRes.Url
+
+	res, err := p.productService.UpdateImage(c.Context(), req)
+	if err != nil {
+		return err
+	}
+
+	oldImageId := c.FormValue("image_id")
+	go p.restfulClient.ImageKit.DeleteFile(context.Background(), oldImageId)
 
 	return c.Status(200).JSON(fiber.Map{"data": res})
 }

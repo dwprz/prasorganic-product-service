@@ -10,6 +10,7 @@ import (
 	"github.com/dwprz/prasorganic-product-service/src/interface/repository"
 	"github.com/dwprz/prasorganic-product-service/src/model/dto"
 	"github.com/dwprz/prasorganic-product-service/src/model/entity"
+	"github.com/jackc/pgx/v5/pgconn"
 	"google.golang.org/grpc/codes"
 	"gorm.io/gorm"
 )
@@ -28,8 +29,7 @@ func (p *ProductImpl) Create(ctx context.Context, data *dto.CreateProductReq) er
 	data.Category = strings.ToUpper(data.Category)
 
 	if err := p.db.WithContext(ctx).Table("products").Create(data).Error; err != nil {
-
-		if errors.Is(err, gorm.ErrDuplicatedKey) {
+		if errPG, ok := err.(*pgconn.PgError); ok && errPG.Code == "23505"  {
 			return &errcustom.Response{
 				HttpCode: 409,
 				GrpcCode: codes.AlreadyExists,
@@ -197,7 +197,8 @@ func (p *ProductImpl) FindManyByName(ctx context.Context, name string, limit, of
 	}, nil
 }
 
-func (p *ProductImpl) UpdateById(ctx context.Context, data *dto.UpdateProductReq) error {
+func (p *ProductImpl) UpdateById(ctx context.Context, data *entity.Product) error {
+
 	err := p.db.Transaction(func(tx *gorm.DB) error {
 		if data.Stock != 0 {
 			if err := tx.WithContext(ctx).Raw("SELECT stock FROM products WHERE product_id = $1 FOR UPDATE;", data.ProductId).Error; err != nil {
@@ -205,7 +206,7 @@ func (p *ProductImpl) UpdateById(ctx context.Context, data *dto.UpdateProductReq
 			}
 		}
 
-		if err := tx.WithContext(ctx).Table("products").Where("product_id = ?", data.ProductId).Updates(data).Error; err != nil {
+		if err := tx.WithContext(ctx).Table("products").Updates(data).Error; err != nil {
 			return err
 		}
 

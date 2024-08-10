@@ -3,6 +3,8 @@ package middleware
 import (
 	"context"
 	"encoding/json"
+	"regexp"
+	"strconv"
 
 	errcustom "github.com/dwprz/prasorganic-product-service/src/common/errors"
 	"github.com/dwprz/prasorganic-product-service/src/common/errors/restful"
@@ -15,17 +17,25 @@ import (
 func (m *Middleware) Error(c *fiber.Ctx, err error) error {
 	restful.LogError(c, err)
 
-	if c.OriginalURL() == "/api/products" && c.Method() == "POST" {
-
+	deleteFile := func() {
 		filename, ok := c.Locals("filename").(string)
 		if ok && filename != "" {
 			go helper.DeleteFile("./tmp/" + filename)
 		}
+	}
 
-		req, ok := c.Locals("upload_imagekit_result").(*uploader.UploadResult)
-		if ok && req.FileId != "" {
-			go m.restfulClient.ImageKit.DeleteFile(context.Background(), req.FileId)
-		}
+	req, ok := c.Locals("upload_imagekit_result").(*uploader.UploadResult)
+	if ok && req.FileId != "" {
+		go m.restfulClient.ImageKit.DeleteFile(context.Background(), req.FileId)
+	}
+
+	if c.Path() == "/api/products" && c.Method() == "POST" {
+		deleteFile()
+	}
+
+	pattern := regexp.MustCompile(`^/api/products/\d+/image$`)
+	if pattern.MatchString(c.Path()) && c.Method() == "PATCH" {
+		deleteFile()
 	}
 
 	if validationError, ok := err.(validator.ValidationErrors); ok {
@@ -42,6 +52,10 @@ func (m *Middleware) Error(c *fiber.Ctx, err error) error {
 
 	if jsonError, ok := err.(*json.UnmarshalTypeError); ok {
 		return restful.HandleJsonError(c, jsonError)
+	}
+
+	if strconvError, ok := err.(*strconv.NumError); ok {
+		return restful.HandleStrconvError(c, strconvError)
 	}
 
 	return c.Status(500).JSON(fiber.Map{

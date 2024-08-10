@@ -13,5 +13,5 @@ type Product interface {
 	FindManyRandom(ctx context.Context, limit, offset int) (*dto.ProductsWithCountRes, error)
 	FindManyByCategory(ctx context.Context, category string, limit, offset int) (*dto.ProductsWithCountRes, error)
 	FindManyByName(ctx context.Context, name string, limit, offset int) (*dto.ProductsWithCountRes, error)
-	UpdateById(ctx context.Context, data *dto.UpdateProductReq) error
+	UpdateById(ctx context.Context, data *entity.Product) error
 }

@@ -37,3 +37,13 @@ func (p *ProductMock) Update(ctx context.Context, data *dto.UpdateProductReq) (*
 
 	return arguments.Get(0).(*entity.Product), arguments.Error(1)
 }
+
+func (p *ProductMock) UpdateImage(ctx context.Context, data *dto.UpdateProductImageReq) (*entity.Product, error) {
+	arguments := p.Mock.Called(ctx, data)
+
+	if arguments.Get(0) == nil {
+		return nil, arguments.Error(1)
+	}
+
+	return arguments.Get(0).(*entity.Product), arguments.Error(1)
+}

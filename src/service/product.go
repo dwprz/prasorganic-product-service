@@ -9,6 +9,7 @@ import (
 	"github.com/dwprz/prasorganic-product-service/src/model/dto"
 	"github.com/dwprz/prasorganic-product-service/src/model/entity"
 	"github.com/go-playground/validator/v10"
+	"github.com/jinzhu/copier"
 )
 
 type ProductImpl struct {
@@ -62,8 +63,31 @@ func (p *ProductImpl) Update(ctx context.Context, data *dto.UpdateProductReq) (*
 	if err := p.validate.Struct(data); err != nil {
 		return nil, err
 	}
+	product := new(entity.Product)
+	if err := copier.Copy(product, data); err != nil {
+		return nil, err
+	}
 
-	if err := p.productRepo.UpdateById(ctx, data); err != nil {
+	if err := p.productRepo.UpdateById(ctx, product); err != nil {
+		return nil, err
+	}
+
+	res, err := p.productRepo.FindById(ctx, data.ProductId)
+	return res, err
+}
+
+func (p *ProductImpl) UpdateImage(ctx context.Context, data *dto.UpdateProductImageReq) (*entity.Product, error) {
+	if err := p.validate.Struct(data); err != nil {
+		return nil, err
+	}
+
+	err := p.productRepo.UpdateById(ctx, &entity.Product{
+		ProductId: data.ProductId,
+		ImageId:   data.ImageId,
+		Image:     data.Image,
+	})
+
+	if err != nil {
 		return nil, err
 	}
 
