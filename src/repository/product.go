@@ -10,6 +10,7 @@ import (
 	"github.com/dwprz/prasorganic-product-service/src/interface/repository"
 	"github.com/dwprz/prasorganic-product-service/src/model/dto"
 	"github.com/dwprz/prasorganic-product-service/src/model/entity"
+	pb "github.com/dwprz/prasorganic-proto/protogen/product"
 	"github.com/jackc/pgx/v5/pgconn"
 	"google.golang.org/grpc/codes"
 	"gorm.io/gorm"
@@ -29,7 +30,7 @@ func (p *ProductImpl) Create(ctx context.Context, data *dto.CreateProductReq) er
 	data.Category = strings.ToUpper(data.Category)
 
 	if err := p.db.WithContext(ctx).Table("products").Create(data).Error; err != nil {
-		if errPG, ok := err.(*pgconn.PgError); ok && errPG.Code == "23505"  {
+		if errPG, ok := err.(*pgconn.PgError); ok && errPG.Code == "23505" {
 			return &errcustom.Response{
 				HttpCode: 409,
 				GrpcCode: codes.AlreadyExists,
@@ -56,6 +57,16 @@ func (p *ProductImpl) FindById(ctx context.Context, productId uint) (*entity.Pro
 	}
 
 	return product, nil
+}
+
+func (p *ProductImpl) FindManyByIds(ctx context.Context, productIds []uint32) ([]*pb.ProductCart, error) {
+	var products []*pb.ProductCart
+
+	if err := p.db.WithContext(ctx).Table("products").Where("product_id in ?", productIds).Scan(&products).Error; err != nil {
+		return nil, err
+	}
+
+	return products, nil
 }
 
 func (p *ProductImpl) FindManyRandom(ctx context.Context, limit, offset int) (*dto.ProductsWithCountRes, error) {
@@ -89,13 +100,13 @@ func (p *ProductImpl) FindManyRandom(ctx context.Context, limit, offset int) (*d
 		return nil, &errcustom.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
 	}
 
-	var products []entity.Product
+	var products []*entity.Product
 	if err := json.Unmarshal(queryRes.Products, &products); err != nil {
 		return nil, err
 	}
 
 	return &dto.ProductsWithCountRes{
-		Products:      &products,
+		Products:      products,
 		TotalProducts: queryRes.TotalProducts,
 	}, nil
 }
@@ -138,13 +149,13 @@ func (p *ProductImpl) FindManyByCategory(ctx context.Context, category string, l
 		return nil, &errcustom.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
 	}
 
-	var products []entity.Product
+	var products []*entity.Product
 	if err := json.Unmarshal(queryRes.Products, &products); err != nil {
 		return nil, err
 	}
 
 	return &dto.ProductsWithCountRes{
-		Products:      &products,
+		Products:      products,
 		TotalProducts: queryRes.TotalProducts,
 	}, nil
 }
@@ -186,13 +197,13 @@ func (p *ProductImpl) FindManyByName(ctx context.Context, name string, limit, of
 		return nil, &errcustom.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
 	}
 
-	var products []entity.Product
+	var products []*entity.Product
 	if err := json.Unmarshal(queryRes.Products, &products); err != nil {
 		return nil, err
 	}
 
 	return &dto.ProductsWithCountRes{
-		Products:      &products,
+		Products:      products,
 		TotalProducts: queryRes.TotalProducts,
 	}, nil
 }

@@ -45,7 +45,7 @@ func (f *FindManyByCategoryTestSuite) Test_Success() {
 	res, err := f.productRepo.FindManyByCategory(context.Background(), "FRUIT", 10, 0)
 	assert.NoError(f.T(), err)
 
-	assert.Equal(f.T(), 10, len(*res.Products))
+	assert.Equal(f.T(), 10, len(res.Products))
 	assert.Equal(f.T(), 20, res.TotalProducts)
 }
 

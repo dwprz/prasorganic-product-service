@@ -8,6 +8,7 @@ import (
 	"github.com/dwprz/prasorganic-product-service/src/interface/service"
 	"github.com/dwprz/prasorganic-product-service/src/model/dto"
 	"github.com/dwprz/prasorganic-product-service/src/model/entity"
+	pb "github.com/dwprz/prasorganic-proto/protogen/product"
 	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/copier"
 )
@@ -33,7 +34,7 @@ func (p *ProductImpl) Create(ctx context.Context, data *dto.CreateProductReq) er
 	return err
 }
 
-func (p *ProductImpl) Get(ctx context.Context, data *dto.GetProductReq) (*dto.DataWithPaging[*[]entity.Product], error) {
+func (p *ProductImpl) FindMany(ctx context.Context, data *dto.GetProductReq) (*dto.DataWithPaging[[]*entity.Product], error) {
 	if err := p.validate.Struct(data); err != nil {
 		return nil, err
 	}
@@ -57,6 +58,15 @@ func (p *ProductImpl) Get(ctx context.Context, data *dto.GetProductReq) (*dto.Da
 	}
 
 	return helper.FormatPagedData(res.Products, res.TotalProducts, data.Page, limit), nil
+}
+
+func (p *ProductImpl) FindManyByIds(ctx context.Context, productIds []uint32) ([]*pb.ProductCart, error) {
+	if err := p.validate.Var(productIds, `dive,required`); err != nil {
+		return nil, err
+	}
+
+	res, err := p.productRepo.FindManyByIds(ctx, productIds)
+	return res, err
 }
 
 func (p *ProductImpl) Update(ctx context.Context, data *dto.UpdateProductReq) (*entity.Product, error) {

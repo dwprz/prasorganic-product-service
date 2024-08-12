@@ -5,11 +5,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/dwprz/prasorganic-product-service/src/core/restful/client"
+	"github.com/dwprz/prasorganic-product-service/src/core/grpc"
+	"github.com/dwprz/prasorganic-product-service/src/core/restful"
 	"github.com/dwprz/prasorganic-product-service/src/core/restful/delivery"
-	"github.com/dwprz/prasorganic-product-service/src/core/restful/handler"
-	"github.com/dwprz/prasorganic-product-service/src/core/restful/middleware"
-	"github.com/dwprz/prasorganic-product-service/src/core/restful/server"
 	"github.com/dwprz/prasorganic-product-service/src/infrastructure/database"
 	"github.com/dwprz/prasorganic-product-service/src/infrastructure/imagekit"
 	"github.com/dwprz/prasorganic-product-service/src/repository"
@@ -35,17 +33,20 @@ func main() {
 	postgresDB := database.NewPostgres()
 
 	imageKit := imagekit.New()
+	imageKitDelivery := delivery.NewImageKit(imageKit)
 
 	productRepository := repository.NewProduct(postgresDB)
 	productService := service.NewProduct(validate, productRepository)
-	imageKitDelivery := delivery.NewImageKit(imageKit)
-	restfulClient := client.New(imageKitDelivery)
-	productRestfulHandler := handler.NewProduct(productService, restfulClient)
-	middleware := middleware.New(restfulClient)
-	restfuleServer := server.New(productRestfulHandler, middleware)
-	defer restfuleServer.Stop()
 
-	go restfuleServer.Run()
+	restfulServer := restful.Initialize(productService, imageKitDelivery)
+	defer restfulServer.Stop()
+
+	go restfulServer.Run()
+
+	grpcServer := grpc.Initialize(productService)
+	defer grpcServer.Stop()
+
+	go grpcServer.Run()
 
 	<-closeCH
 }

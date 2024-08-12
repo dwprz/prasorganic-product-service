@@ -60,19 +60,19 @@ func withCTE(ctx context.Context, name string, limit, offset int) (*dto.Products
 		return nil, &errors.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
 	}
 
-	var products []entity.Product
+	var products []*entity.Product
 	if err := json.Unmarshal(queryRes.Products, &products); err != nil {
 		return nil, err
 	}
 
 	return &dto.ProductsWithCountRes{
-		Products:      &products,
+		Products:      products,
 		TotalProducts: queryRes.TotalProducts,
 	}, nil
 }
 
 func nonCTE(ctx context.Context, name string, limit, offset int) (*dto.ProductsWithCountRes, error) {
-	products := new([]entity.Product)
+	var products []*entity.Product
 	name = strings.Join(strings.Fields(name), " & ")
 
 	query := `
@@ -85,11 +85,11 @@ func nonCTE(ctx context.Context, name string, limit, offset int) (*dto.ProductsW
 	LIMIT ? OFFSET ?;
 	`
 
-	if err := postgres.WithContext(ctx).Raw(query, name, limit, offset).Scan(products).Error; err != nil {
+	if err := postgres.WithContext(ctx).Raw(query, name, limit, offset).Scan(&products).Error; err != nil {
 		return nil, err
 	}
 
-	if len(*products) == 0 {
+	if len(products) == 0 {
 		return nil, &errors.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
 	}
 

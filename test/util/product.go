@@ -19,11 +19,14 @@ func NewProductTest(db *gorm.DB) *ProductTest {
 	}
 }
 
-func (p *ProductTest) CreateMany() {
+func (p *ProductTest) CreateMany() (productIds []uint32) {
 	var products []entity.Product
 
 	for i := 1; i <= 20; i++ {
+		productIds = append(productIds, uint32(i))
+
 		products = append(products, entity.Product{
+			ProductId:   uint(i),
 			ProductName: "Apel " + strconv.Itoa(i),
 			ImageId:     "img" + strconv.Itoa(i),
 			Image:       "apel_malang.jpg",
@@ -39,7 +42,13 @@ func (p *ProductTest) CreateMany() {
 
 	}
 
-	p.db.Create(products)
+	if err := p.db.Create(products).Error; err != nil {
+
+		log.Logger.WithFields(logrus.Fields{"location": "util.ProductTest/CreateMany", "section": "db.Create"}).Error(err)
+		return nil
+	}
+
+	return productIds
 }
 
 func (p *ProductTest) Delete() {

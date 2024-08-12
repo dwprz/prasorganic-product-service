@@ -8,7 +8,7 @@ type ProductQueryRes struct {
 }
 
 type ProductsWithCountRes struct {
-	Products      *[]entity.Product `json:"products"`
+	Products      []*entity.Product `json:"products"`
 	TotalProducts int               `json:"total_products"`
 }
 

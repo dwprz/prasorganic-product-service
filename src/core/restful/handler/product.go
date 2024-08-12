@@ -51,7 +51,7 @@ func (p *Product) Get(c *fiber.Ctx) error {
 	category := c.Query("category")
 	productName := c.Query("name")
 
-	res, err := p.productService.Get(c.Context(), &dto.GetProductReq{
+	res, err := p.productService.FindMany(c.Context(), &dto.GetProductReq{
 		Page:        page,
 		Category:    category,
 		ProductName: productName,

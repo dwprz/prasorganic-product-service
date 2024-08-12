@@ -5,11 +5,13 @@ import (
 
 	"github.com/dwprz/prasorganic-product-service/src/model/dto"
 	"github.com/dwprz/prasorganic-product-service/src/model/entity"
+	pb "github.com/dwprz/prasorganic-proto/protogen/product"
 )
 
 type Product interface {
 	Create(ctx context.Context, data *dto.CreateProductReq) error
-	Get(ctx context.Context, data *dto.GetProductReq) (*dto.DataWithPaging[*[]entity.Product], error)
+	FindMany(ctx context.Context, data *dto.GetProductReq) (*dto.DataWithPaging[[]*entity.Product], error)
+	FindManyByIds(ctx context.Context, productIds []uint32) ([]*pb.ProductCart, error)
 	Update(ctx context.Context, data *dto.UpdateProductReq) (*entity.Product, error)
-	UpdateImage(ctx context.Context, data *dto.UpdateProductImageReq) (*entity.Product, error) 
+	UpdateImage(ctx context.Context, data *dto.UpdateProductImageReq) (*entity.Product, error)
 }
