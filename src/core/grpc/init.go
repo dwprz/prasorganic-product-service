@@ -8,7 +8,7 @@ import (
 	"github.com/dwprz/prasorganic-product-service/src/interface/service"
 )
 
-func Initialize(ps service.Product) *server.Grpc {
+func InitServer(ps service.Product) *server.Grpc {
 	productHandler := handler.NewProductGrpc(ps)
 	unaryResponseInterceptor := interceptor.NewUnaryResponse()
 

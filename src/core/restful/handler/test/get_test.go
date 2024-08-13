@@ -10,7 +10,6 @@ import (
 	"github.com/dwprz/prasorganic-product-service/src/core/restful/handler"
 	"github.com/dwprz/prasorganic-product-service/src/core/restful/middleware"
 	"github.com/dwprz/prasorganic-product-service/src/core/restful/server"
-	"github.com/dwprz/prasorganic-product-service/src/infrastructure/imagekit"
 	"github.com/dwprz/prasorganic-product-service/src/mock/service"
 	"github.com/dwprz/prasorganic-product-service/src/model/dto"
 	"github.com/dwprz/prasorganic-product-service/src/model/entity"
@@ -33,10 +32,9 @@ type GetTestSuite struct {
 func (g *GetTestSuite) SetupSuite() {
 	g.productService = &service.ProductMock{}
 
-	imageKit := imagekit.New()
-	imageKitDelivery := delivery.NewImageKit(imageKit)
+	imageKitDelivery := delivery.NewImageKitRestful()
 
-	restfulClient := client.New(imageKitDelivery)
+	restfulClient := client.NewRestful(imageKitDelivery)
 	productHandler := handler.NewProduct(g.productService, restfulClient)
 	middleware := middleware.New(restfulClient)
 

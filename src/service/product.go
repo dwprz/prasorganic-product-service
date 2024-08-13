@@ -4,29 +4,27 @@ import (
 	"context"
 
 	"github.com/dwprz/prasorganic-product-service/src/common/helper"
+	v "github.com/dwprz/prasorganic-product-service/src/infrastructure/validator"
 	"github.com/dwprz/prasorganic-product-service/src/interface/repository"
 	"github.com/dwprz/prasorganic-product-service/src/interface/service"
 	"github.com/dwprz/prasorganic-product-service/src/model/dto"
 	"github.com/dwprz/prasorganic-product-service/src/model/entity"
 	pb "github.com/dwprz/prasorganic-proto/protogen/product"
-	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/copier"
 )
 
 type ProductImpl struct {
-	validate    *validator.Validate
 	productRepo repository.Product
 }
 
-func NewProduct(v *validator.Validate, pr repository.Product) service.Product {
+func NewProduct(pr repository.Product) service.Product {
 	return &ProductImpl{
-		validate:    v,
 		productRepo: pr,
 	}
 }
 
 func (p *ProductImpl) Create(ctx context.Context, data *dto.CreateProductReq) error {
-	if err := p.validate.Struct(data); err != nil {
+	if err := v.Validate.Struct(data); err != nil {
 		return err
 	}
 
@@ -35,7 +33,7 @@ func (p *ProductImpl) Create(ctx context.Context, data *dto.CreateProductReq) er
 }
 
 func (p *ProductImpl) FindMany(ctx context.Context, data *dto.GetProductReq) (*dto.DataWithPaging[[]*entity.Product], error) {
-	if err := p.validate.Struct(data); err != nil {
+	if err := v.Validate.Struct(data); err != nil {
 		return nil, err
 	}
 
@@ -61,7 +59,7 @@ func (p *ProductImpl) FindMany(ctx context.Context, data *dto.GetProductReq) (*d
 }
 
 func (p *ProductImpl) FindManyByIds(ctx context.Context, productIds []uint32) ([]*pb.ProductCart, error) {
-	if err := p.validate.Var(productIds, `dive,required`); err != nil {
+	if err := v.Validate.Var(productIds, `dive,required`); err != nil {
 		return nil, err
 	}
 
@@ -70,7 +68,7 @@ func (p *ProductImpl) FindManyByIds(ctx context.Context, productIds []uint32) ([
 }
 
 func (p *ProductImpl) Update(ctx context.Context, data *dto.UpdateProductReq) (*entity.Product, error) {
-	if err := p.validate.Struct(data); err != nil {
+	if err := v.Validate.Struct(data); err != nil {
 		return nil, err
 	}
 	product := new(entity.Product)
@@ -87,7 +85,7 @@ func (p *ProductImpl) Update(ctx context.Context, data *dto.UpdateProductReq) (*
 }
 
 func (p *ProductImpl) UpdateImage(ctx context.Context, data *dto.UpdateProductImageReq) (*entity.Product, error) {
-	if err := p.validate.Struct(data); err != nil {
+	if err := v.Validate.Struct(data); err != nil {
 		return nil, err
 	}
 

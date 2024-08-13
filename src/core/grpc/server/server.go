@@ -13,15 +13,15 @@ import (
 type Grpc struct {
 	port                     string
 	server                   *grpc.Server
-	productHandler           pb.ProductServiceServer
+	productGrpcHandler       pb.ProductServiceServer
 	unaryResponseInterceptor *interceptor.UnaryResponse
 }
 
 // this main grpc server
-func NewGrpc(port string, ph pb.ProductServiceServer, uri *interceptor.UnaryResponse) *Grpc {
+func NewGrpc(port string, pgh pb.ProductServiceServer, uri *interceptor.UnaryResponse) *Grpc {
 	return &Grpc{
 		port:                     port,
-		productHandler:           ph,
+		productGrpcHandler:       pgh,
 		unaryResponseInterceptor: uri,
 	}
 }
@@ -42,7 +42,7 @@ func (g *Grpc) Run() {
 
 	g.server = grpcServer
 
-	pb.RegisterProductServiceServer(grpcServer, g.productHandler)
+	pb.RegisterProductServiceServer(grpcServer, g.productGrpcHandler)
 
 	if err := grpcServer.Serve(listener); err != nil {
 		log.Logger.Errorf("failed to serve grpc on port %s : %v", g.port, err)

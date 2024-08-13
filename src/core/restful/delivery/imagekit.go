@@ -6,23 +6,20 @@ import (
 	"os"
 
 	"github.com/dwprz/prasorganic-product-service/src/common/log"
+	"github.com/dwprz/prasorganic-product-service/src/infrastructure/imagekit"
 	"github.com/dwprz/prasorganic-product-service/src/interface/delivery"
-	"github.com/imagekit-developer/imagekit-go"
 	"github.com/imagekit-developer/imagekit-go/api/uploader"
 	"github.com/sirupsen/logrus"
 )
 
-type ImageKit struct {
-	ik *imagekit.ImageKit
+type ImageKitRestful struct{}
+
+func NewImageKitRestful() delivery.ImageKitRestful {
+
+	return &ImageKitRestful{}
 }
 
-func NewImageKit(ik *imagekit.ImageKit) delivery.ImageKitRestful {
-	return &ImageKit{
-		ik: ik,
-	}
-}
-
-func (i *ImageKit) UploadImage(ctx context.Context, path string, filename string) (*uploader.UploadResult, error) {
+func (i *ImageKitRestful) UploadImage(ctx context.Context, path string, filename string) (*uploader.UploadResult, error) {
 	fileData, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -33,7 +30,7 @@ func (i *ImageKit) UploadImage(ctx context.Context, path string, filename string
 
 	useUniqueFileName := false
 
-	res, err := i.ik.Uploader.Upload(ctx, file, uploader.UploadParam{
+	res, err := imagekit.IK.Uploader.Upload(ctx, file, uploader.UploadParam{
 		FileName:          filename,
 		UseUniqueFileName: &useUniqueFileName,
 	})
@@ -45,9 +42,9 @@ func (i *ImageKit) UploadImage(ctx context.Context, path string, filename string
 	return &res.Data, nil
 }
 
-func (i *ImageKit) DeleteFile(ctx context.Context, fileId string) {
-	_, err := i.ik.Media.DeleteFile(ctx, fileId)
+func (i *ImageKitRestful) DeleteFile(ctx context.Context, fileId string) {
+	_, err := imagekit.IK.Media.DeleteFile(ctx, fileId)
 	if err != nil {
-		log.Logger.WithFields(logrus.Fields{"location": "client.ImageKit/DeleteFile", "section": "ik.Media.DeleteFile"}).Error(err)
+		log.Logger.WithFields(logrus.Fields{"location": "client.ImageKitRestful/DeleteFile", "section": "ik.Media.DeleteFile"}).Error(err)
 	}
 }

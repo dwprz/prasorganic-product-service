@@ -7,7 +7,7 @@ type Restful struct {
 	ImageKit delivery.ImageKitRestful
 }
 
-func New(ikc delivery.ImageKitRestful) *Restful {
+func NewRestful(ikc delivery.ImageKitRestful) *Restful {
 	return &Restful{
 		ImageKit: ikc,
 	}
