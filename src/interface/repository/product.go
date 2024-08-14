@@ -16,4 +16,5 @@ type Product interface {
 	FindManyByCategory(ctx context.Context, category string, limit, offset int) (*dto.ProductsWithCountRes, error)
 	FindManyByName(ctx context.Context, name string, limit, offset int) (*dto.ProductsWithCountRes, error)
 	UpdateById(ctx context.Context, data *entity.Product) error
+	UpdateManyStock(ctx context.Context, data []*dto.UpdateStockReq) error
 }

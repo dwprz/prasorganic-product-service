@@ -4,10 +4,10 @@ import "github.com/dwprz/prasorganic-product-service/src/interface/delivery"
 
 // this main restful client
 type Restful struct {
-	ImageKit delivery.ImageKitRestful
+	ImageKit delivery.ImageKit
 }
 
-func NewRestful(ikc delivery.ImageKitRestful) *Restful {
+func NewRestful(ikc delivery.ImageKit) *Restful {
 	return &Restful{
 		ImageKit: ikc,
 	}

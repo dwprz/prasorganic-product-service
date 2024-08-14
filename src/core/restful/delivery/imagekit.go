@@ -12,14 +12,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type ImageKitRestful struct{}
+type ImageKit struct{}
 
-func NewImageKitRestful() delivery.ImageKitRestful {
-
-	return &ImageKitRestful{}
+func NewImageKit() delivery.ImageKit {
+	return &ImageKit{}
 }
 
-func (i *ImageKitRestful) UploadImage(ctx context.Context, path string, filename string) (*uploader.UploadResult, error) {
+func (i *ImageKit) UploadImage(ctx context.Context, path string, filename string) (*uploader.UploadResult, error) {
 	fileData, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -42,9 +41,9 @@ func (i *ImageKitRestful) UploadImage(ctx context.Context, path string, filename
 	return &res.Data, nil
 }
 
-func (i *ImageKitRestful) DeleteFile(ctx context.Context, fileId string) {
+func (i *ImageKit) DeleteFile(ctx context.Context, fileId string) {
 	_, err := imagekit.IK.Media.DeleteFile(ctx, fileId)
 	if err != nil {
-		log.Logger.WithFields(logrus.Fields{"location": "client.ImageKitRestful/DeleteFile", "section": "ik.Media.DeleteFile"}).Error(err)
+		log.Logger.WithFields(logrus.Fields{"location": "client.ImageKit/DeleteFile", "section": "ik.Media.DeleteFile"}).Error(err)
 	}
 }

@@ -40,3 +40,8 @@ type UpdateProductImageReq struct {
 	ImageId   string `json:"image_id" validate:"required,min=10,max=100"`
 	Image     string `json:"image" validate:"required,min=10,max=500"`
 }
+
+type UpdateStockReq struct {
+	ProductId uint `json:"product_id" validate:"required"`
+	Quantity  int `json:"quantity" validate:"required,min=1"`
+}

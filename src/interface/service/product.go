@@ -14,4 +14,5 @@ type Product interface {
 	FindManyByIds(ctx context.Context, productIds []uint32) ([]*pb.ProductCart, error)
 	Update(ctx context.Context, data *dto.UpdateProductReq) (*entity.Product, error)
 	UpdateImage(ctx context.Context, data *dto.UpdateProductImageReq) (*entity.Product, error)
+	UpdateManyStock(ctx context.Context, data []*dto.UpdateStockReq) error 
 }

@@ -58,3 +58,9 @@ func (p *ProductMock) UpdateImage(ctx context.Context, data *dto.UpdateProductIm
 
 	return arguments.Get(0).(*entity.Product), arguments.Error(1)
 }
+
+func (p *ProductMock) UpdateManyStock(ctx context.Context, data []*dto.UpdateStockReq) error {
+	arguments := p.Mock.Called(ctx, data)
+
+	return arguments.Error(0)
+}

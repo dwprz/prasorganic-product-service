@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	errcustom "github.com/dwprz/prasorganic-product-service/src/common/errors"
+	"github.com/dwprz/prasorganic-product-service/src/common/helper"
 	"github.com/dwprz/prasorganic-product-service/src/interface/repository"
 	"github.com/dwprz/prasorganic-product-service/src/model/dto"
 	"github.com/dwprz/prasorganic-product-service/src/model/entity"
@@ -17,12 +18,12 @@ import (
 )
 
 type ProductImpl struct {
-	db *gorm.DB
+	db      *gorm.DB
 }
 
 func NewProduct(db *gorm.DB) repository.Product {
 	return &ProductImpl{
-		db: db,
+		db:      db,
 	}
 }
 
@@ -224,9 +225,30 @@ func (p *ProductImpl) UpdateById(ctx context.Context, data *entity.Product) erro
 		return nil
 	})
 
-	if err != nil {
-		return err
-	}
+	return err
+}
 
-	return nil
+func (p *ProductImpl) UpdateManyStock(ctx context.Context, data []*dto.UpdateStockReq) error {
+
+	err := p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var ids []uint
+		for _, v := range data {
+			ids = append(ids, v.ProductId)
+		}
+
+		if err := tx.Exec("SELECT stock FROM products WHERE product_id in (?) FOR UPDATE;", ids).Error; err != nil {
+			return err
+		}
+
+		query, args := helper.BuildQueryUpdateManyStock(data)
+
+		if err := tx.Exec(query, args...).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+
+	return err
 }

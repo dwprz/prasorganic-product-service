@@ -32,7 +32,7 @@ type GetTestSuite struct {
 func (g *GetTestSuite) SetupSuite() {
 	g.productService = &service.ProductMock{}
 
-	imageKitDelivery := delivery.NewImageKitRestful()
+	imageKitDelivery := delivery.NewImageKit()
 
 	restfulClient := client.NewRestful(imageKitDelivery)
 	productHandler := handler.NewProduct(g.productService, restfulClient)

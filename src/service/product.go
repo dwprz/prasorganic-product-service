@@ -102,3 +102,12 @@ func (p *ProductImpl) UpdateImage(ctx context.Context, data *dto.UpdateProductIm
 	res, err := p.productRepo.FindById(ctx, data.ProductId)
 	return res, err
 }
+
+func (p *ProductImpl) UpdateManyStock(ctx context.Context, data []*dto.UpdateStockReq) error {
+	if err := v.Validate.Var(data, `required,dive`); err != nil {
+		return err
+	}
+
+	err := p.productRepo.UpdateManyStock(ctx, data)
+	return err
+}

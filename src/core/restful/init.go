@@ -19,8 +19,8 @@ func InitServer(ps service.Product, rc *client.Restful) *server.Restful {
 }
 
 func InitClient() *client.Restful {
-	imageKitRestfulDelivery := delivery.NewImageKitRestful()
-	restfulClient := client.NewRestful(imageKitRestfulDelivery)
+	imageKitDelivery := delivery.NewImageKit()
+	restfulClient := client.NewRestful(imageKitDelivery)
 
 	return restfulClient
 }
