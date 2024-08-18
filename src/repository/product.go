@@ -18,12 +18,12 @@ import (
 )
 
 type ProductImpl struct {
-	db      *gorm.DB
+	db *gorm.DB
 }
 
 func NewProduct(db *gorm.DB) repository.Product {
 	return &ProductImpl{
-		db:      db,
+		db: db,
 	}
 }
 
@@ -211,14 +211,14 @@ func (p *ProductImpl) FindManyByName(ctx context.Context, name string, limit, of
 
 func (p *ProductImpl) UpdateById(ctx context.Context, data *entity.Product) error {
 
-	err := p.db.Transaction(func(tx *gorm.DB) error {
+	err := p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if data.Stock != 0 {
-			if err := tx.WithContext(ctx).Raw("SELECT stock FROM products WHERE product_id = $1 FOR UPDATE;", data.ProductId).Error; err != nil {
+			if err := tx.Exec("SELECT stock FROM products WHERE product_id = $1 FOR UPDATE;", data.ProductId).Error; err != nil {
 				return err
 			}
 		}
 
-		if err := tx.WithContext(ctx).Table("products").Updates(data).Error; err != nil {
+		if err := tx.Table("products").Updates(data).Error; err != nil {
 			return err
 		}
 
@@ -228,19 +228,25 @@ func (p *ProductImpl) UpdateById(ctx context.Context, data *entity.Product) erro
 	return err
 }
 
-func (p *ProductImpl) UpdateManyStock(ctx context.Context, data []*dto.UpdateStockReq) error {
+func (p *ProductImpl) ReduceStocks(ctx context.Context, data []*dto.ReduceStocksReq) error {
 
 	err := p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var ids []uint
-		for _, v := range data {
-			ids = append(ids, v.ProductId)
-		}
-
-		if err := tx.Exec("SELECT stock FROM products WHERE product_id in (?) FOR UPDATE;", ids).Error; err != nil {
+		ids, err := helper.GetProductIds(data)
+		if err != nil {
 			return err
 		}
 
-		query, args := helper.BuildQueryUpdateManyStock(data)
+		var products []*entity.Product
+
+		if err := tx.Raw("SELECT product_id, product_name, stock FROM products WHERE product_id in (?) FOR UPDATE;", ids).Scan(&products).Error; err != nil {
+			return err
+		}
+
+		if err := helper.CheckStockProducts(data, products); err != nil {
+			return err
+		}
+
+		query, args := helper.BuildQueryReduceStocks(data)
 
 		if err := tx.Exec(query, args...).Error; err != nil {
 			return err
@@ -249,6 +255,29 @@ func (p *ProductImpl) UpdateManyStock(ctx context.Context, data []*dto.UpdateSto
 		return nil
 	})
 
+	return err
+}
+
+func (p *ProductImpl) RollbackStoks(ctx context.Context, data []*dto.RollbackStoksReq) error {
+
+	err := p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		ids, err := helper.GetProductIds(data)
+		if err != nil {
+			return err
+		}
+
+		if err := tx.Exec("SELECT stock FROM products WHERE product_id in (?) FOR UPDATE;", ids).Error; err != nil {
+			return err
+		}
+
+		query, args := helper.BuildQueryRollbackStocks(data)
+
+		if err := tx.Exec(query, args...).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 
 	return err
 }

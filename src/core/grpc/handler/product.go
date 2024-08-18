@@ -32,12 +32,22 @@ func (p *ProductGrpcImpl) FindManyByIdsForCart(ctx context.Context, data *pb.Pro
 	}, nil
 }
 
-func (p *ProductGrpcImpl) UpdateStock(ctx context.Context, data *pb.UpdateStockReq) (*emptypb.Empty, error) {
-	var req []*dto.UpdateStockReq
+func (p *ProductGrpcImpl) ReduceStocks(ctx context.Context, data *pb.ReduceStocksReq) (*emptypb.Empty, error) {
+	var req []*dto.ReduceStocksReq
 	if err := copier.Copy(&req, data.Data); err != nil {
 		return nil, err
 	}
 
-	err := p.productService.UpdateManyStock(ctx, req)
+	err := p.productService.ReduceStocks(ctx, req)
+	return nil, err
+}
+
+func (p *ProductGrpcImpl) RollbackStocks(ctx context.Context, data *pb.RollbackStocksReq) (*emptypb.Empty, error) {
+	var req []*dto.RollbackStoksReq
+	if err := copier.Copy(&req, data.Data); err != nil {
+		return nil, err
+	}
+
+	err := p.productService.RollbackStoks(ctx, req)
 	return nil, err
 }

@@ -59,7 +59,13 @@ func (p *ProductMock) UpdateImage(ctx context.Context, data *dto.UpdateProductIm
 	return arguments.Get(0).(*entity.Product), arguments.Error(1)
 }
 
-func (p *ProductMock) UpdateManyStock(ctx context.Context, data []*dto.UpdateStockReq) error {
+func (p *ProductMock) ReduceStocks(ctx context.Context, data []*dto.ReduceStocksReq) error {
+	arguments := p.Mock.Called(ctx, data)
+
+	return arguments.Error(0)
+}
+
+func (p *ProductMock) RollbackStoks(ctx context.Context, data []*dto.RollbackStoksReq) error {
 	arguments := p.Mock.Called(ctx, data)
 
 	return arguments.Error(0)

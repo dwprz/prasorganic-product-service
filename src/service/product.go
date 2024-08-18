@@ -103,11 +103,20 @@ func (p *ProductImpl) UpdateImage(ctx context.Context, data *dto.UpdateProductIm
 	return res, err
 }
 
-func (p *ProductImpl) UpdateManyStock(ctx context.Context, data []*dto.UpdateStockReq) error {
+func (p *ProductImpl) ReduceStocks(ctx context.Context, data []*dto.ReduceStocksReq) error {
 	if err := v.Validate.Var(data, `required,dive`); err != nil {
 		return err
 	}
 
-	err := p.productRepo.UpdateManyStock(ctx, data)
+	err := p.productRepo.ReduceStocks(ctx, data)
+	return err
+}
+
+func (p *ProductImpl) RollbackStoks(ctx context.Context, data []*dto.RollbackStoksReq) error{
+	if err := v.Validate.Var(data, `required,dive`); err != nil {
+		return err
+	}
+
+	err := p.productRepo.RollbackStoks(ctx, data)
 	return err
 }

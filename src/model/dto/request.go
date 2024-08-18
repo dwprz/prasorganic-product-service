@@ -41,7 +41,12 @@ type UpdateProductImageReq struct {
 	Image     string `json:"image" validate:"required,min=10,max=500"`
 }
 
-type UpdateStockReq struct {
+type ReduceStocksReq struct {
 	ProductId uint `json:"product_id" validate:"required"`
-	Quantity  int `json:"quantity" validate:"required,min=1"`
+	Quantity  int  `json:"quantity" validate:"required,min=1"`
+}
+
+type RollbackStoksReq struct {
+	ProductId uint `json:"product_id" validate:"required"`
+	Quantity  int  `json:"quantity" validate:"required,min=1"`
 }
