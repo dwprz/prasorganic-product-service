@@ -21,13 +21,13 @@ func NewProductGrpc(ps service.Product) pb.ProductServiceServer {
 	}
 }
 
-func (p *ProductGrpcImpl) FindManyByIdsForCart(ctx context.Context, data *pb.ProductIds) (*pb.ProductsCartResponse, error) {
+func (p *ProductGrpcImpl) FindManyByIdsForCart(ctx context.Context, data *pb.ProductIds) (*pb.ProductsCartRes, error) {
 	res, err := p.productService.FindManyByIds(ctx, data.Ids)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.ProductsCartResponse{
+	return &pb.ProductsCartRes{
 		Data: res,
 	}, nil
 }
