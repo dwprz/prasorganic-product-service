@@ -16,11 +16,11 @@ import (
 // this main restful server
 type Restful struct {
 	app                   *fiber.App
-	productRestfulHandler *handler.Product
+	productRestfulHandler *handler.ProductRESTful
 	middleware            *middleware.Middleware
 }
 
-func New(prh *handler.Product, m *middleware.Middleware) *Restful {
+func New(prh *handler.ProductRESTful, m *middleware.Middleware) *Restful {
 	app := fiber.New(fiber.Config{
 		CaseSensitive: true,
 		StrictRouting: true,

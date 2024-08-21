@@ -35,7 +35,7 @@ func (g *GetTestSuite) SetupSuite() {
 	imageKitDelivery := delivery.NewImageKit()
 
 	restfulClient := client.NewRestful(imageKitDelivery)
-	productHandler := handler.NewProduct(g.productService, restfulClient)
+	productHandler := handler.NewProductRESTful(g.productService, restfulClient)
 	middleware := middleware.New(restfulClient)
 
 	g.restfulServer = server.New(productHandler, middleware)

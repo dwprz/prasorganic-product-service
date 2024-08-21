@@ -10,7 +10,7 @@ import (
 )
 
 func InitServer(ps service.Product, rc *client.Restful) *server.Restful {
-	productHandler := handler.NewProduct(ps, rc)
+	productHandler := handler.NewProductRESTful(ps, rc)
 
 	middleware := middleware.New(rc)
 	restfulServer := server.New(productHandler, middleware)

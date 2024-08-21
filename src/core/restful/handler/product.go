@@ -11,19 +11,19 @@ import (
 	"github.com/imagekit-developer/imagekit-go/api/uploader"
 )
 
-type Product struct {
+type ProductRESTful struct {
 	productService service.Product
 	restfulClient  *client.Restful
 }
 
-func NewProduct(ps service.Product, rc *client.Restful) *Product {
-	return &Product{
+func NewProductRESTful(ps service.Product, rc *client.Restful) *ProductRESTful {
+	return &ProductRESTful{
 		productService: ps,
 		restfulClient:  rc,
 	}
 }
 
-func (p *Product) Create(c *fiber.Ctx) error {
+func (p *ProductRESTful) Create(c *fiber.Ctx) error {
 	req := new(dto.CreateProductReq)
 
 	if err := c.BodyParser(req); err != nil {
@@ -42,7 +42,7 @@ func (p *Product) Create(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{"data": "successfully created product"})
 }
 
-func (p *Product) Get(c *fiber.Ctx) error {
+func (p *ProductRESTful) Get(c *fiber.Ctx) error {
 	page, err := strconv.Atoi(c.Query("page", "1"))
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func (p *Product) Get(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"data": res.Data, "paging": res.Paging})
 }
 
-func (p *Product) Update(c *fiber.Ctx) error {
+func (p *ProductRESTful) Update(c *fiber.Ctx) error {
 	req := new(dto.UpdateProductReq)
 
 	if err := c.BodyParser(&req); err != nil {
@@ -86,7 +86,7 @@ func (p *Product) Update(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"data": res})
 }
 
-func (p *Product) UpdateImage(c *fiber.Ctx) error {
+func (p *ProductRESTful) UpdateImage(c *fiber.Ctx) error {
 	req := new(dto.UpdateProductImageReq)
 
 	productId, err := strconv.Atoi(c.Params("productId"))
