@@ -68,7 +68,7 @@ func (g *GetTestSuite) Test_Success() {
 		},
 	}
 
-	g.productService.Mock.On("Get", mock.Anything, &dto.GetProductReq{
+	g.productService.Mock.On("Get", mock.Anything, &dto.GetProductsReq{
 		Page:        1,
 		ProductName: "soup",
 	}).Return(data, nil)

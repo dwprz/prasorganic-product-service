@@ -19,7 +19,7 @@ func (p *ProductMock) Create(ctx context.Context, data *dto.CreateProductReq) er
 	return argument.Error(0)
 }
 
-func (p *ProductMock) FindMany(ctx context.Context, data *dto.GetProductReq) (*dto.DataWithPaging[[]*entity.Product], error) {
+func (p *ProductMock) FindMany(ctx context.Context, data *dto.GetProductsReq) (*dto.DataWithPaging[[]*entity.Product], error) {
 	arguments := p.Mock.Called(ctx, data)
 
 	if arguments.Get(0) == nil {
@@ -49,7 +49,7 @@ func (p *ProductMock) Update(ctx context.Context, data *dto.UpdateProductReq) (*
 	return arguments.Get(0).(*entity.Product), arguments.Error(1)
 }
 
-func (p *ProductMock) UpdateImage(ctx context.Context, data *dto.UpdateProductImageReq) (*entity.Product, error) {
+func (p *ProductMock) UpdateImage(ctx context.Context, data *dto.UpdateImagePoductReq) (*entity.Product, error) {
 	arguments := p.Mock.Called(ctx, data)
 
 	if arguments.Get(0) == nil {

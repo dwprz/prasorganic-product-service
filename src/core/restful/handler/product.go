@@ -51,7 +51,7 @@ func (p *ProductRESTful) Get(c *fiber.Ctx) error {
 	category := c.Query("category")
 	productName := c.Query("name")
 
-	res, err := p.productService.FindMany(c.Context(), &dto.GetProductReq{
+	res, err := p.productService.FindMany(c.Context(), &dto.GetProductsReq{
 		Page:        page,
 		Category:    category,
 		ProductName: productName,
@@ -87,7 +87,7 @@ func (p *ProductRESTful) Update(c *fiber.Ctx) error {
 }
 
 func (p *ProductRESTful) UpdateImage(c *fiber.Ctx) error {
-	req := new(dto.UpdateProductImageReq)
+	req := new(dto.UpdateImagePoductReq)
 
 	productId, err := strconv.Atoi(c.Params("productId"))
 	if err != nil {

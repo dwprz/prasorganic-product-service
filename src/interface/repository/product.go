@@ -17,5 +17,5 @@ type Product interface {
 	FindManyByName(ctx context.Context, name string, limit, offset int) (*dto.ProductsWithCountRes, error)
 	UpdateById(ctx context.Context, data *entity.Product) error
 	ReduceStocks(ctx context.Context, data []*dto.ReduceStocksReq) error
-	RollbackStoks(ctx context.Context, data []*dto.RollbackStoksReq) error
+	RollbackStocks(ctx context.Context, data []*dto.RollbackStoksReq) error
 }

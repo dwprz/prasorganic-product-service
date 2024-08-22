@@ -258,7 +258,7 @@ func (p *ProductImpl) ReduceStocks(ctx context.Context, data []*dto.ReduceStocks
 	return err
 }
 
-func (p *ProductImpl) RollbackStoks(ctx context.Context, data []*dto.RollbackStoksReq) error {
+func (p *ProductImpl) RollbackStocks(ctx context.Context, data []*dto.RollbackStoksReq) error {
 
 	err := p.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		ids, err := helper.GetProductIds(data)

@@ -32,7 +32,7 @@ func (p *ProductImpl) Create(ctx context.Context, data *dto.CreateProductReq) er
 	return err
 }
 
-func (p *ProductImpl) FindMany(ctx context.Context, data *dto.GetProductReq) (*dto.DataWithPaging[[]*entity.Product], error) {
+func (p *ProductImpl) FindMany(ctx context.Context, data *dto.GetProductsReq) (*dto.DataWithPaging[[]*entity.Product], error) {
 	if err := v.Validate.Struct(data); err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (p *ProductImpl) Update(ctx context.Context, data *dto.UpdateProductReq) (*
 	return res, err
 }
 
-func (p *ProductImpl) UpdateImage(ctx context.Context, data *dto.UpdateProductImageReq) (*entity.Product, error) {
+func (p *ProductImpl) UpdateImage(ctx context.Context, data *dto.UpdateImagePoductReq) (*entity.Product, error) {
 	if err := v.Validate.Struct(data); err != nil {
 		return nil, err
 	}
@@ -117,6 +117,6 @@ func (p *ProductImpl) RollbackStoks(ctx context.Context, data []*dto.RollbackSto
 		return err
 	}
 
-	err := p.productRepo.RollbackStoks(ctx, data)
+	err := p.productRepo.RollbackStocks(ctx, data)
 	return err
 }

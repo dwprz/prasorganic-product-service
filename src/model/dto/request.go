@@ -14,7 +14,7 @@ type CreateProductReq struct {
 	Description string  `json:"description" validate:"required"`
 }
 
-type GetProductReq struct {
+type GetProductsReq struct {
 	Page        int    `json:"page" validate:"min=1,max=100" gorm:"-"`
 	ProductName string `json:"product_name" validate:"omitempty,min=3,max=100"`
 	Category    string `json:"category" validate:"omitempty,min=3,max=20"`
@@ -35,7 +35,7 @@ type UpdateProductReq struct {
 	Description string  `json:"description" validate:"omitempty"`
 }
 
-type UpdateProductImageReq struct {
+type UpdateImagePoductReq struct {
 	ProductId uint   `json:"product_id" validate:"required"`
 	ImageId   string `json:"image_id" validate:"required,min=10,max=100"`
 	Image     string `json:"image" validate:"required,min=10,max=500"`
