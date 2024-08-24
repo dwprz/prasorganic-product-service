@@ -39,7 +39,7 @@ func (p *ProductRESTful) Create(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(201).JSON(fiber.Map{"data": "successfully created product"})
+	return c.Status(201).JSON(fiber.Map{"data": "created product successfully"})
 }
 
 func (p *ProductRESTful) Get(c *fiber.Ctx) error {
