@@ -34,22 +34,21 @@ func CheckStockProducts(orders []*dto.ReduceStocksReq, products []*entity.Produc
 	}
 
 	productsMap := make(map[uint]*entity.Product)
-	for _,product  := range products {
+	for _, product := range products {
 		productsMap[product.ProductId] = product
 	}
 
 	for _, order := range orders {
-		
+
 		product, exists := productsMap[order.ProductId]
 		if !exists {
 			msg := fmt.Sprintf("product with id %d not found", order.ProductId)
 			return &errors.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: msg}
 		}
 
-
 		if order.Quantity > int(product.Stock) {
 			msg := fmt.Sprintf("not enough stock product %s (id: %d)", product.ProductName, order.ProductId)
-			return &errors.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: msg}
+			return &errors.Response{HttpCode: 400, GrpcCode: codes.FailedPrecondition, Message: msg}
 		}
 	}
 
