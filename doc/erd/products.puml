@@ -1,0 +1,23 @@
+@startuml
+
+entity "products" as Product {
+    *product_id SERIAL <<not null>> <<PK>>,
+    --
+    product_name VARCHAR(100) <<not null>> <<unique>>,
+    image_id VARCHAR(100) <<not null>>,
+    image VARCHAR(500) <<not null>>,
+    rating REAL <<nullable>>,
+    sold INTEGER <<nullable>>,
+    price INTEGER <<not null>>,
+    stock INTEGER <<not null>>,
+    length INTEGER <<not null>>,
+    width INTEGER <<not null>>,
+    height INTEGER <<not null>>,
+    weight REAL <<not null>>,
+    category VARCHAR(20) <<not null>>,
+    description TEXT <<nullable>>,
+    created_at TIMESTAMPZ(3) <<not null>> default(CURRENT_TIMESTAMP),
+    updated_at TIMESTAMPZ(3)
+}
+
+@enduml
