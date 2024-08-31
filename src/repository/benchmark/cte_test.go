@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/dwprz/prasorganic-product-service/src/common/errors"
+	"github.com/dwprz/prasorganic-product-service/src/common/helper"
 	"github.com/dwprz/prasorganic-product-service/src/infrastructure/database"
 	"github.com/dwprz/prasorganic-product-service/src/model/dto"
 	"github.com/dwprz/prasorganic-product-service/src/model/entity"
@@ -17,14 +18,62 @@ import (
 // *cd current directory
 // go test -v -bench=. -count=1 -p=1
 
-var postgres *gorm.DB
+var db *gorm.DB
 
 func init() {
-	postgres = database.NewPostgres()
+	db = database.NewPostgres()
 }
 
 func withCTE(ctx context.Context, name string, limit, offset int) (*dto.ProductsWithCountRes, error) {
-	queryRes := new(dto.ProductQueryRes)
+	var queryRes []*entity.ProductQueryRes
+	name = strings.Join(strings.Fields(name), " & ")
+
+	query := `
+	WITH cte_total_products AS (
+    	SELECT
+			COUNT(*) AS total_products
+		FROM
+			products
+		WHERE
+			to_tsvector('indonesian', product_name) @@ to_tsquery('indonesian', ?)
+    ),
+    cte_products AS (
+    	SELECT
+			*
+		FROM
+			products
+		WHERE
+			to_tsvector('indonesian', product_name) @@ to_tsquery('indonesian', ?)
+		LIMIT ? OFFSET ?
+    )
+	SELECT ctp.total_products, cp.* FROM cte_total_products AS ctp CROSS JOIN cte_products AS cp;
+	`
+
+	res := db.WithContext(ctx).Raw(query, name, name, limit, offset).Find(&queryRes)
+
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	if len(queryRes) == 0 {
+		return nil, &errors.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
+	}
+
+	products, total := helper.MapProductQueryToEntities(queryRes)
+
+	return &dto.ProductsWithCountRes{
+		Products:      products,
+		TotalProducts: total,
+	}, nil
+}
+
+type ProductQueryRes struct {
+	Products      []byte
+	TotalProducts int
+}
+
+func cteWithJsonAgg(ctx context.Context, name string, limit, offset int) (*dto.ProductsWithCountRes, error) {
+	queryRes := new(ProductQueryRes)
 	name = strings.Join(strings.Fields(name), " & ")
 
 	query := `
@@ -50,7 +99,7 @@ func withCTE(ctx context.Context, name string, limit, offset int) (*dto.Products
         (SELECT json_agg(row_to_json(cte_products.*)) FROM cte_products) AS products;
 	`
 
-	res := postgres.WithContext(ctx).Raw(query, name, name, limit, offset).Find(queryRes)
+	res := db.WithContext(ctx).Raw(query, name, name, limit, offset).Find(queryRes)
 
 	if res.Error != nil {
 		return nil, res.Error
@@ -85,7 +134,7 @@ func nonCTE(ctx context.Context, name string, limit, offset int) (*dto.ProductsW
 	LIMIT ? OFFSET ?;
 	`
 
-	if err := postgres.WithContext(ctx).Raw(query, name, limit, offset).Scan(&products).Error; err != nil {
+	if err := db.WithContext(ctx).Raw(query, name, limit, offset).Scan(&products).Error; err != nil {
 		return nil, err
 	}
 
@@ -104,7 +153,7 @@ func nonCTE(ctx context.Context, name string, limit, offset int) (*dto.ProductsW
 		to_tsvector('indonesian', product_name) @@ to_tsquery('indonesian', ?);
 	`
 
-	if err := postgres.WithContext(ctx).Raw(query, name).Scan(&totalProducts).Error; err != nil {
+	if err := db.WithContext(ctx).Raw(query, name).Scan(&totalProducts).Error; err != nil {
 		return nil, err
 	}
 
@@ -121,6 +170,12 @@ func Benchmark_CompareQueryCTE(b *testing.B) {
 		}
 	})
 
+	b.Run("CTE With JSON Agg", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			cteWithJsonAgg(context.Background(), "soup", 20, 0)
+		}
+	})
+
 	b.Run("Non CTE", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			nonCTE(context.Background(), "soup", 20, 0)
@@ -132,32 +187,48 @@ func Benchmark_CompareQueryCTE(b *testing.B) {
 // 1 s = 1000 ms
 //================================ With CTE ================================
 // test 1:
-// Benchmark_CompareQuery/With_CTE-12                  3024            374551 ns/op
+// Benchmark_CompareQueryCTE/With_CTE-12               1550            748378 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.188s
+// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.270s
 
 // test 2:
-// Benchmark_CompareQuery/With_CTE-12                  2852            377084 ns/op
+// Benchmark_CompareQueryCTE/With_CTE-12               1454            737744 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.133s
+// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.189s
 
 // test 3:
-// Benchmark_CompareQuery/With_CTE-12                  3081            373036 ns/op
+// Benchmark_CompareQueryCTE/With_CTE-12               1485            758148 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.205s
+// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.240s
+
+//================================ CTE With JSON Agg ================================
+// test 1:
+// Benchmark_CompareQueryCTE/CTE_With_JSON_Agg-12              1220            864279 ns/op
+// PASS
+// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.186s
+
+// test 2:
+// Benchmark_CompareQueryCTE/CTE_With_JSON_Agg-12              1376            861641 ns/op
+// PASS
+// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   2.320s
+
+// test 3:
+// Benchmark_CompareQueryCTE/CTE_With_JSON_Agg-12              1327            871121 ns/op
+// PASS
+// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.278s
 
 //================================ Non CTE ================================
 // test 1:
-// Benchmark_CompareQuery/Non_CTE-12                   2654            432769 ns/op
+// Benchmark_CompareQueryCTE/Non_CTE-12                 986           1082766 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.210s
+// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.223s
 
 // test 2:
-// Benchmark_CompareQuery/Non_CTE-12                   2568            434005 ns/op
+// Benchmark_CompareQueryCTE/Non_CTE-12                1069           1084290 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.176s
+// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.305s
 
 // test 3:
-// Benchmark_CompareQuery/Non_CTE-12                   2546            432254 ns/op
+// Benchmark_CompareQueryCTE/Non_CTE-12                1024           1068560 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.164s
+// ok      github.com/dwprz/prasorganic-product-service/src/repository/benchmark   1.245s

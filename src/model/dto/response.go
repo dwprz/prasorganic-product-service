@@ -2,11 +2,6 @@ package dto
 
 import "github.com/dwprz/prasorganic-product-service/src/model/entity"
 
-type ProductQueryRes struct {
-	Products      []byte `json:"products"`
-	TotalProducts int    `json:"total_products"`
-}
-
 type ProductsWithCountRes struct {
 	Products      []*entity.Product `json:"products"`
 	TotalProducts int               `json:"total_products"`

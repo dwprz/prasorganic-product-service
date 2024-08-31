@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"strings"
 
@@ -71,11 +70,11 @@ func (p *ProductImpl) FindManyByIds(ctx context.Context, productIds []uint32) ([
 }
 
 func (p *ProductImpl) FindManyRandom(ctx context.Context, limit, offset int) (*dto.ProductsWithCountRes, error) {
-	queryRes := new(dto.ProductQueryRes)
+	var queryRes []*entity.ProductQueryRes
 
 	query := `
 	WITH cte_total_products AS (
-		SELECT COUNT(*) FROM products
+		SELECT COUNT(*) AS total_products FROM products
     ),
     cte_products AS (
     	SELECT
@@ -86,39 +85,34 @@ func (p *ProductImpl) FindManyRandom(ctx context.Context, limit, offset int) (*d
             random()
 		LIMIT $1 OFFSET $2
     )
-    SELECT
-        (SELECT * FROM cte_total_products) AS total_products,
-        (SELECT json_agg(row_to_json(cte_products.*)) FROM cte_products) AS products;
+	SELECT ctp.total_products, cp.* FROM cte_total_products AS ctp CROSS JOIN cte_products AS cp;
 	`
 
-	res := p.db.WithContext(ctx).Raw(query, limit, offset).Find(queryRes)
+	res := p.db.WithContext(ctx).Raw(query, limit, offset).Find(&queryRes)
 
 	if res.Error != nil {
 		return nil, res.Error
 	}
 
-	if queryRes.TotalProducts == 0 {
+	if len(queryRes) == 0 {
 		return nil, &errcustom.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
 	}
 
-	var products []*entity.Product
-	if err := json.Unmarshal(queryRes.Products, &products); err != nil {
-		return nil, err
-	}
+	products, total := helper.MapProductQueryToEntities(queryRes)
 
 	return &dto.ProductsWithCountRes{
 		Products:      products,
-		TotalProducts: queryRes.TotalProducts,
+		TotalProducts: total,
 	}, nil
 }
 
 func (p *ProductImpl) FindManyByCategory(ctx context.Context, category string, limit, offset int) (*dto.ProductsWithCountRes, error) {
-	queryRes := new(dto.ProductQueryRes)
+	var queryRes []*entity.ProductQueryRes
 
 	query := `
 	WITH cte_total_products AS (
 		SELECT
-			COUNT(*)
+			COUNT(*) AS total_products
 		FROM
 			products
 		WHERE
@@ -135,40 +129,35 @@ func (p *ProductImpl) FindManyByCategory(ctx context.Context, category string, l
             created_at DESC
 		LIMIT $2 OFFSET $3
     )
-    SELECT
-        (SELECT * FROM cte_total_products) AS total_products,
-        (SELECT json_agg(row_to_json(cte_products.*)) FROM cte_products) AS products;
+   	SELECT ctp.total_products, cp.* FROM cte_total_products AS ctp CROSS JOIN cte_products AS cp;
 	`
 
-	res := p.db.WithContext(ctx).Raw(query, category, limit, offset).Find(queryRes)
+	res := p.db.WithContext(ctx).Raw(query, category, limit, offset).Find(&queryRes)
 
 	if res.Error != nil {
 		return nil, res.Error
 	}
 
-	if queryRes.TotalProducts == 0 {
+	if len(queryRes) == 0 {
 		return nil, &errcustom.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
 	}
 
-	var products []*entity.Product
-	if err := json.Unmarshal(queryRes.Products, &products); err != nil {
-		return nil, err
-	}
+	products, total := helper.MapProductQueryToEntities(queryRes)
 
 	return &dto.ProductsWithCountRes{
 		Products:      products,
-		TotalProducts: queryRes.TotalProducts,
+		TotalProducts: total,
 	}, nil
 }
 
 func (p *ProductImpl) FindManyByName(ctx context.Context, name string, limit, offset int) (*dto.ProductsWithCountRes, error) {
-	queryRes := new(dto.ProductQueryRes)
+	var queryRes []*entity.ProductQueryRes
 	name = strings.Join(strings.Fields(name), " & ")
 
 	query := `
 	WITH cte_total_products AS (
     	SELECT
-			COUNT(*)
+			COUNT(*) AS total_products
 		FROM
 			products
 		WHERE
@@ -183,29 +172,24 @@ func (p *ProductImpl) FindManyByName(ctx context.Context, name string, limit, of
 			to_tsvector('indonesian', product_name) @@ to_tsquery('indonesian', ?)
 		LIMIT ? OFFSET ?
     )
-    SELECT
-        (SELECT * FROM cte_total_products) AS total_products,
-        (SELECT json_agg(row_to_json(cte_products.*)) FROM cte_products) AS products;
+	SELECT ctp.total_products, cp.* FROM cte_total_products AS ctp CROSS JOIN cte_products AS cp;
 	`
 
-	res := p.db.WithContext(ctx).Raw(query, name, name, limit, offset).Find(queryRes)
+	res := p.db.WithContext(ctx).Raw(query, name, name, limit, offset).Find(&queryRes)
 
 	if res.Error != nil {
 		return nil, res.Error
 	}
 
-	if len(queryRes.Products) == 0 {
+	if len(queryRes) == 0 {
 		return nil, &errcustom.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "products not found"}
 	}
 
-	var products []*entity.Product
-	if err := json.Unmarshal(queryRes.Products, &products); err != nil {
-		return nil, err
-	}
+	products, total := helper.MapProductQueryToEntities(queryRes)
 
 	return &dto.ProductsWithCountRes{
 		Products:      products,
-		TotalProducts: queryRes.TotalProducts,
+		TotalProducts: total,
 	}, nil
 }
 
