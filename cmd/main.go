@@ -27,6 +27,7 @@ func main() {
 	handleCloseApp(closeCH)
 
 	postgresDB := database.NewPostgres()
+	defer database.ClosePostgres(postgresDB)
 
 	productRepository := repository.NewProduct(postgresDB)
 	productService := service.NewProduct(productRepository)
